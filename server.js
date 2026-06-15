@@ -1,16 +1,15 @@
-// server.js — Zephyr Financial Portal Backend
-// Deploy to Render.com or similar
+// server.js — Zephyr Financial Portal Backend (Corrected — no WebSocket)
+// Deploy to Render.com
 // Requires: SUPABASE_URL, SUPABASE_KEY env vars
 
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import cors from 'cors';
-import crypto from 'crypto';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize Supabase
+// Initialize Supabase (REST API only, no Realtime)
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 if (!supabaseUrl || !supabaseKey) {
@@ -41,7 +40,6 @@ app.get('/api/entries', async (req, res) => {
       .lt('date', mes + '-32')
       .order('date', { ascending: true });
     if (error) throw error;
-    // Convert snake_case to camelCase for frontend
     const entries = data.map(e => ({
       id: e.id,
       date: e.date,
@@ -62,24 +60,15 @@ app.get('/api/entries', async (req, res) => {
   }
 });
 
-// POST /api/entries (create new entry)
+// POST /api/entries
 app.post('/api/entries', async (req, res) => {
   try {
     const { id, date, pixY, ccY, pixCNPJ, vliq, custos, estorno, gasto, pedidos, pecas } = req.body;
     const { data, error } = await supabase
       .from('entries')
       .insert([{
-        id,
-        date,
-        pix_y: pixY,
-        cc_y: ccY,
-        pix_cnpj: pixCNPJ,
-        vliq,
-        custos,
-        estorno,
-        gasto,
-        pedidos,
-        pecas,
+        id, date, pix_y: pixY, cc_y: ccY, pix_cnpj: pixCNPJ,
+        vliq, custos, estorno, gasto, pedidos, pecas,
       }])
       .select();
     if (error) throw error;
@@ -90,7 +79,7 @@ app.post('/api/entries', async (req, res) => {
   }
 });
 
-// PUT /api/entries/:id (update entry)
+// PUT /api/entries/:id
 app.put('/api/entries/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -98,15 +87,7 @@ app.put('/api/entries/:id', async (req, res) => {
     const { data, error } = await supabase
       .from('entries')
       .update({
-        pix_y: pixY,
-        cc_y: ccY,
-        pix_cnpj: pixCNPJ,
-        vliq,
-        custos,
-        estorno,
-        gasto,
-        pedidos,
-        pecas,
+        pix_y: pixY, cc_y: ccY, pix_cnpj: pixCNPJ, vliq, custos, estorno, gasto, pedidos, pecas,
         updated_at: new Date(),
       })
       .eq('id', id)
@@ -123,10 +104,7 @@ app.put('/api/entries/:id', async (req, res) => {
 app.delete('/api/entries/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { error } = await supabase
-      .from('entries')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('entries').delete().eq('id', id);
     if (error) throw error;
     res.json({ deleted: id });
   } catch (err) {
@@ -137,42 +115,32 @@ app.delete('/api/entries/:id', async (req, res) => {
 
 // ==================== CONFIG API ====================
 
-// GET /api/config
 app.get('/api/config', async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('config')
-      .select('*')
-      .eq('id', 'default')
-      .single();
+      .from('config').select('*').eq('id', 'default').single();
     if (error) throw error;
-    const cfg = {
+    res.json({
       yampiRate: data.yampi_rate,
       metaRate: data.meta_rate,
       cpaMax: data.cpa_max,
       roasAlvo: data.roas_alvo,
       margemMeta: data.margem_meta,
-    };
-    res.json(cfg);
+    });
   } catch (err) {
     console.error('GET /api/config error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// PUT /api/config
 app.put('/api/config', async (req, res) => {
   try {
     const { yampiRate, metaRate, cpaMax, roasAlvo, margemMeta } = req.body;
     const { data, error } = await supabase
       .from('config')
       .update({
-        yampi_rate: yampiRate,
-        meta_rate: metaRate,
-        cpa_max: cpaMax,
-        roas_alvo: roasAlvo,
-        margem_meta: margemMeta,
-        updated_at: new Date(),
+        yampi_rate: yampiRate, meta_rate: metaRate, cpa_max: cpaMax,
+        roas_alvo: roasAlvo, margem_meta: margemMeta, updated_at: new Date(),
       })
       .eq('id', 'default')
       .select();
@@ -192,32 +160,25 @@ app.put('/api/config', async (req, res) => {
 
 // ==================== DESPESAS API ====================
 
-// GET /api/despesas?mes=2026-06
 app.get('/api/despesas', async (req, res) => {
   try {
     const mes = req.query.mes || new Date().toISOString().slice(0, 7);
     const { data, error } = await supabase
-      .from('despesas')
-      .select('*')
-      .eq('mes', mes)
-      .order('created_at', { ascending: true });
+      .from('despesas').select('*').eq('mes', mes).order('created_at', { ascending: true });
     if (error) throw error;
-    const despesas = data.map(d => ({ desc: d.descricao, valor: d.valor }));
-    res.json(despesas);
+    res.json(data.map(d => ({ desc: d.descricao, valor: d.valor })));
   } catch (err) {
     console.error('GET /api/despesas error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/despesas
 app.post('/api/despesas', async (req, res) => {
   try {
     const { mes, desc, valor } = req.body;
-    const id = `desp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const { data, error } = await supabase
       .from('despesas')
-      .insert([{ id, mes, descricao: desc, valor }])
+      .insert([{ id: `desp-${Date.now()}`, mes, descricao: desc, valor }])
       .select();
     if (error) throw error;
     res.json({ desc: data[0].descricao, valor: data[0].valor });
@@ -227,14 +188,10 @@ app.post('/api/despesas', async (req, res) => {
   }
 });
 
-// DELETE /api/despesas/:id
 app.delete('/api/despesas/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { error } = await supabase
-      .from('despesas')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('despesas').delete().eq('id', id);
     if (error) throw error;
     res.json({ deleted: id });
   } catch (err) {
@@ -243,24 +200,13 @@ app.delete('/api/despesas/:id', async (req, res) => {
   }
 });
 
-// ==================== SHOPIFY WEBHOOKS (Future) ====================
-// POST /api/webhooks/shopify
+// ==================== SHOPIFY WEBHOOKS ====================
+
 app.post('/api/webhooks/shopify', async (req, res) => {
   try {
-    // TODO: Verify HMAC signature from Shopify header
-    // const hmacHeader = req.headers['x-shopify-hmac-sha256'];
-    // For now: just log and acknowledge
     const order = req.body;
-    console.log('📦 Shopify webhook received:', {
-      orderId: order.id,
-      totalPrice: order.total_price,
-      items: order.line_items?.length || 0,
-    });
-
-    // Example: Create entry from Shopify order
-    // (requires mapping Shopify fields to entry format)
-    // For now, just acknowledge
-    res.json({ received: true, orderId: order.id });
+    console.log('📦 Shopify webhook:', order.id);
+    res.json({ received: true });
   } catch (err) {
     console.error('Shopify webhook error:', err.message);
     res.status(500).json({ error: err.message });
@@ -270,15 +216,14 @@ app.post('/api/webhooks/shopify', async (req, res) => {
 // ==================== ERROR HANDLING ====================
 
 app.use((err, req, res, next) => {
-  console.error('❌ Unhandled error:', err.message);
-  res.status(500).json({ error: 'Internal server error', details: err.message });
+  console.error('❌ Error:', err.message);
+  res.status(500).json({ error: err.message });
 });
 
-// Start server
+// Start
 app.listen(PORT, () => {
-  console.log(`✓ Zephyr backend running on port ${PORT}`);
-  console.log(`✓ Supabase connected: ${supabaseUrl}`);
-  console.log(`✓ Ready to receive requests from ${process.env.FRONTEND_URL || 'any origin'}`);
+  console.log(`✓ Zephyr backend on port ${PORT}`);
+  console.log(`✓ Supabase: ${supabaseUrl}`);
 });
 
 export default app;
