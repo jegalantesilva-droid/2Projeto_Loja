@@ -1,0 +1,20 @@
+{
+  "name": "zephyr-backend",
+  "version": "1.0.0",
+  "description": "Zephyr Financial Portal Backend",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "@supabase/supabase-js": "^2.38.0"
+  },
+  "devDependencies": {}
+}
