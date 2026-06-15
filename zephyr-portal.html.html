@@ -1,0 +1,560 @@
+<!-- Zephyr Financial Portal v2 — Conectado ao Backend -->
+<!-- Substitua a URL do backend se necessário -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zephyr — Portal Financeiro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #F6F4F0;
+      color: #17161C;
+      line-height: 1.6;
+    }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    header { margin-bottom: 30px; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .logo { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; letter-spacing: 3px; color: #17161C; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 30px; }
+    .tab-btn {
+      padding: 12px 20px;
+      border: none;
+      background: #E8E6E1;
+      color: #17161C;
+      cursor: pointer;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .tab-btn.active {
+      background: #6E4BE8;
+      color: white;
+    }
+    .tab-btn:hover { background: #9B7BF2; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* PAINEL */
+    .hero { background: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .hero-title { font-family: 'Fraunces', serif; font-size: 32px; margin-bottom: 10px; }
+    .hero-value { font-size: 48px; font-weight: 700; color: #6E4BE8; margin-bottom: 20px; }
+    .hero-meta { display: flex; gap: 30px; font-size: 14px; }
+    .hero-meta-item { display: flex; flex-direction: column; }
+    .hero-meta-label { color: #757575; margin-bottom: 4px; }
+    .hero-meta-value { font-weight: 600; color: #17161C; }
+    
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .kpi-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .kpi-label { font-size: 12px; color: #757575; text-transform: uppercase; margin-bottom: 8px; }
+    .kpi-value { font-size: 28px; font-weight: 700; color: #17161C; }
+    
+    .gauge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .gauge-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .gauge-circle { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 20px; }
+    .gauge-circle.meta { background: #1C9667; }
+    .gauge-circle.fora { background: #D84A35; }
+    
+    /* LANÇAMENTOS */
+    .form-section { background: white; padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group label { font-size: 12px; font-weight: 600; color: #757575; margin-bottom: 6px; text-transform: uppercase; }
+    .form-group input, .form-group select { padding: 10px; border: 1px solid #E8E6E1; border-radius: 6px; font-size: 14px; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #6E4BE8; }
+    .btn { padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+    .btn-primary { background: #6E4BE8; color: white; }
+    .btn-primary:hover { background: #5A3BB3; }
+    .btn-secondary { background: #E8E6E1; color: #17161C; }
+    .btn-secondary:hover { background: #D8D5CF; }
+    .btn-danger { background: #D84A35; color: white; }
+    .btn-danger:hover { background: #C43A25; }
+    
+    .entries-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .entries-table th { background: #F6F4F0; padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: #757575; }
+    .entries-table td { padding: 12px; border-bottom: 1px solid #E8E6E1; }
+    .entries-table tr:hover { background: #F9F8F6; }
+    .tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .tag-entrada { background: #E8F5E9; color: #2E7D32; }
+    .tag-custo { background: #FFF3E0; color: #E65100; }
+    .tag-anuncio { background: #E3F2FD; color: #1565C0; }
+    
+    .preview { background: #F6F4F0; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 13px; }
+    .preview-line { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .preview-label { color: #757575; }
+    .preview-value { font-weight: 600; color: #17161C; }
+    
+    /* DESPESAS */
+    .despesa-list { background: white; padding: 20px; border-radius: 12px; }
+    .despesa-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #E8E6E1; }
+    .despesa-info { flex: 1; }
+    .despesa-desc { font-weight: 600; color: #17161C; margin-bottom: 4px; }
+    .despesa-valor { font-size: 14px; color: #6E4BE8; font-weight: 700; }
+    .despesa-actions { display: flex; gap: 10px; }
+    
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #1C9667; color: white; padding: 15px 20px; border-radius: 8px; z-index: 9999; animation: slideIn 0.3s; }
+    @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+    
+    .summary-box { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; }
+    .summary-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #E8E6E1; }
+    .summary-row strong { color: #17161C; }
+    .summary-row:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-top">
+        <div class="logo">Z E P H Y R</div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('painel')">📊 Painel</button>
+        <button class="tab-btn" onclick="switchTab('lancamentos')">📝 Lançamentos</button>
+        <button class="tab-btn" onclick="switchTab('despesas')">⚙️ Despesas & Metas</button>
+      </div>
+    </header>
+
+    <!-- PAINEL -->
+    <div id="painel" class="tab-content active">
+      <div class="hero">
+        <div class="hero-title">Lucro Líquido</div>
+        <div class="hero-value" id="heroLucro">R$ 0,00</div>
+        <div class="hero-meta">
+          <div class="hero-meta-item">
+            <div class="hero-meta-label">Margem</div>
+            <div class="hero-meta-value" id="heroMargem">0%</div>
+          </div>
+          <div class="hero-meta-item">
+            <div class="hero-meta-label">Mês</div>
+            <div class="hero-meta-value" id="heroMes">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Venda Bruta</div>
+          <div class="kpi-value" id="kpiVendaBruta">R$ 0,00</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Venda Líquida</div>
+          <div class="kpi-value" id="kpiVendaLiq">R$ 0,00</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Gasto + Imposto</div>
+          <div class="kpi-value" id="kpiGastoMeta">R$ 0,00</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Custos Produto</div>
+          <div class="kpi-value" id="kpiCustos">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="gauge-grid">
+        <div class="gauge-card">
+          <div style="color: #17161C; font-weight: 600; margin-bottom: 8px;">ROAS</div>
+          <div class="gauge-circle meta" id="gaugeRoas">1.5x</div>
+          <div style="font-size: 12px; color: #757575;">Alvo: ≥1.5x</div>
+        </div>
+        <div class="gauge-card">
+          <div style="color: #17161C; font-weight: 600; margin-bottom: 8px;">CPA</div>
+          <div class="gauge-circle meta" id="gaugeCpa">R$ 0</div>
+          <div style="font-size: 12px; color: #757575;">Máximo: R$ 117,90</div>
+        </div>
+        <div class="gauge-card">
+          <div style="color: #17161C; font-weight: 600; margin-bottom: 8px;">Margem</div>
+          <div class="gauge-circle meta" id="gaugeMargem">0%</div>
+          <div style="font-size: 12px; color: #757575;">Meta: ≥20%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LANÇAMENTOS -->
+    <div id="lancamentos" class="tab-content">
+      <div class="form-section">
+        <h3 style="margin-bottom: 20px;">Novo Lançamento</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="fData">
+          </div>
+          <div class="form-group">
+            <label>Pix (Você)</label>
+            <input type="number" id="fPixY" placeholder="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Cartão (Você)</label>
+            <input type="number" id="fCcY" placeholder="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Pix (CNPJ)</label>
+            <input type="number" id="fPixCnpj" placeholder="0.00" step="0.01">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Valor Líquido</label>
+            <input type="number" id="fVliq" placeholder="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Custos (Produto)</label>
+            <input type="number" id="fCustos" placeholder="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Estorno</label>
+            <input type="number" id="fEstorno" placeholder="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Gasto (Anúncios)</label>
+            <input type="number" id="fGasto" placeholder="0.00" step="0.01">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Pedidos</label>
+            <input type="number" id="fPedidos" placeholder="0" step="1">
+          </div>
+          <div class="form-group">
+            <label>Peças</label>
+            <input type="number" id="fPecas" placeholder="0" step="1">
+          </div>
+        </div>
+        <div class="preview" id="preview"></div>
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+          <button class="btn btn-primary" onclick="save()">Salvar Lançamento</button>
+          <button class="btn btn-secondary" onclick="clearForm()">Limpar</button>
+        </div>
+      </div>
+
+      <table class="entries-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Venda Bruta</th>
+            <th>Venda Líquida</th>
+            <th>Custos</th>
+            <th>Gasto</th>
+            <th>Resultado</th>
+            <th>Margem</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="entriesBody">
+        </tbody>
+      </table>
+    </div>
+
+    <!-- DESPESAS & METAS -->
+    <div id="despesas" class="tab-content">
+      <div class="form-section">
+        <h3 style="margin-bottom: 15px;">Despesas Fixas</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Descrição</label>
+            <input type="text" id="dDesc" placeholder="Ex: Shopify, Contabilidade...">
+          </div>
+          <div class="form-group">
+            <label>Valor (R$)</label>
+            <input type="number" id="dValor" placeholder="0.00" step="0.01">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="addDesp()" style="width: 100%;">Adicionar Despesa</button>
+      </div>
+
+      <div class="despesa-list" id="despesosList"></div>
+
+      <div class="form-section" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 15px;">Configurações de Taxas & Metas</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Taxa Yampi (%)</label>
+            <input type="number" id="cYampi" placeholder="2.5" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Taxa Meta Imposto (%)</label>
+            <input type="number" id="cMeta" placeholder="13.83" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>CPA Máximo (R$)</label>
+            <input type="number" id="cCpa" placeholder="117.90" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>ROAS Alvo</label>
+            <input type="number" id="cRoas" placeholder="1.5" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>Margem Meta (%)</label>
+            <input type="number" id="cMarg" placeholder="20" step="0.1">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveCfg()" style="width: 100%;">Salvar Configurações</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" style="display: none;"></div>
+
+  <script>
+    // ===== CONFIG =====
+    const API_URL = 'https://zephyr-backend-2rin.onrender.com';
+    
+    let entries = [];
+    let cfg = { yampiRate: 2.5, metaRate: 13.83, cpaMax: 117.90, roasAlvo: 1.5, margemMeta: 20 };
+    let despesas = {};
+    let view = new Date();
+    let formOpen = false;
+    let editId = null;
+
+    // ===== HELPERS =====
+    const uid = () => `e-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const mkey = d => d.toISOString().slice(0, 7);
+    const num = s => parseFloat(s) || 0;
+    const fmt = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+    const toast = msg => { const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); };
+    const parseNum = s => num(s.toString().replace(/,/g, '.'));
+
+    // ===== SYNC COM API =====
+    const syncData = async () => {
+      try {
+        // Fetch entries
+        const resE = await fetch(`${API_URL}/api/entries?mes=${mkey(view)}`);
+        if (resE.ok) {
+          entries = await resE.json();
+          console.log('✓ Entries sincronizadas');
+        }
+        
+        // Fetch config
+        const resC = await fetch(`${API_URL}/api/config`);
+        if (resC.ok) {
+          cfg = await resC.json();
+          console.log('✓ Config sincronizada');
+        }
+        
+        // Fetch despesas
+        const resD = await fetch(`${API_URL}/api/despesas?mes=${mkey(view)}`);
+        if (resD.ok) {
+          const desD = await resD.json();
+          despesas[mkey(view)] = desD || [];
+          console.log('✓ Despesas sincronizadas');
+        }
+      } catch (e) {
+        console.warn('Sync falhou:', e.message);
+      }
+      render();
+    };
+
+    // ===== FORM =====
+    const readForm = () => ({
+      id: editId || uid(),
+      date: document.getElementById('fData').value,
+      pixY: parseNum(document.getElementById('fPixY').value),
+      ccY: parseNum(document.getElementById('fCcY').value),
+      pixCNPJ: parseNum(document.getElementById('fPixCnpj').value),
+      vliq: parseNum(document.getElementById('fVliq').value),
+      custos: parseNum(document.getElementById('fCustos').value),
+      estorno: parseNum(document.getElementById('fEstorno').value),
+      gasto: parseNum(document.getElementById('fGasto').value),
+      pedidos: parseInt(document.getElementById('fPedidos').value) || 0,
+      pecas: parseInt(document.getElementById('fPecas').value) || 0,
+    });
+
+    const save = async () => {
+      const data = readForm();
+      if (!data.date) { toast('Informe a data'); return; }
+      
+      const wasEdit = !!editId;
+      if (wasEdit) {
+        const i = entries.findIndex(x => x.id === editId);
+        if (i >= 0) entries[i] = { ...entries[i], ...data };
+      } else {
+        entries.push(data);
+      }
+      
+      // Push to API
+      try {
+        const url = wasEdit ? `${API_URL}/api/entries/${data.id}` : `${API_URL}/api/entries`;
+        const method = wasEdit ? 'PUT' : 'POST';
+        await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } catch (e) {
+        console.warn('Push falhou:', e.message);
+      }
+      
+      view = new Date(data.date);
+      formOpen = false;
+      editId = null;
+      clearForm();
+      render();
+      toast(wasEdit ? 'Lançamento atualizado' : 'Lançamento adicionado');
+    };
+
+    const addDesp = async () => {
+      const desc = document.getElementById('dDesc').value.trim();
+      const val = parseNum(document.getElementById('dValor').value);
+      if (!desc) { toast('Informe descrição'); return; }
+      
+      const k = mkey(view);
+      if (!despesas[k]) despesas[k] = [];
+      despesas[k].push({ desc, valor: val });
+      
+      // Push to API
+      try {
+        await fetch(`${API_URL}/api/despesas`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mes: k, desc, valor: val })
+        });
+      } catch (e) {
+        console.warn('Push despesa falhou:', e.message);
+      }
+      
+      document.getElementById('dDesc').value = '';
+      document.getElementById('dValor').value = '';
+      render();
+      toast('Despesa adicionada');
+    };
+
+    const saveCfg = async () => {
+      cfg = {
+        yampiRate: parseNum(document.getElementById('cYampi').value),
+        metaRate: parseNum(document.getElementById('cMeta').value),
+        cpaMax: parseNum(document.getElementById('cCpa').value),
+        roasAlvo: parseNum(document.getElementById('cRoas').value),
+        margemMeta: parseNum(document.getElementById('cMarg').value),
+      };
+      
+      try {
+        await fetch(`${API_URL}/api/config`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cfg)
+        });
+      } catch (e) {
+        console.warn('Push config falhou:', e.message);
+      }
+      
+      render();
+      toast('Configurações salvas');
+    };
+
+    // ===== RENDER =====
+    const calc = e => {
+      const vbruta = e.pixY + e.ccY + e.pixCNPJ;
+      const taxaY = vbruta * (cfg.yampiRate / 100);
+      const taxaA = (vbruta - taxaY) - e.vliq;
+      const gastoI = e.gasto * (1 + cfg.metaRate / 100);
+      const resultado = e.vliq - e.custos - e.estorno - gastoI;
+      const margem = e.vliq > 0 ? (resultado / e.vliq * 100) : 0;
+      return { vbruta, resultado, margem, gastoI };
+    };
+
+    const render = () => {
+      const k = mkey(view);
+      const monthEntries = entries.filter(e => e.date.startsWith(k));
+      
+      // KPIs
+      let vendaBruta = 0, vendaLiq = 0, custos = 0, resultado = 0;
+      monthEntries.forEach(e => {
+        const c = calc(e);
+        vendaBruta += c.vbruta;
+        vendaLiq += e.vliq;
+        custos += e.custos;
+        resultado += c.resultado;
+      });
+      
+      // Despesas
+      const despTotal = (despesas[k] || []).reduce((a, d) => a + d.valor, 0);
+      const lucro = resultado - despTotal;
+      const margem = vendaLiq > 0 ? (lucro / vendaLiq * 100) : 0;
+      
+      // Metrics
+      const totalPedidos = monthEntries.reduce((a, e) => a + e.pedidos, 0);
+      const totalGasto = monthEntries.reduce((a, e) => a + (e.gasto * (1 + cfg.metaRate / 100)), 0);
+      const cpa = totalPedidos > 0 ? (totalGasto / totalPedidos) : 0;
+      const roas = totalGasto > 0 ? (vendaBruta / totalGasto) : 0;
+      
+      // Hero
+      document.getElementById('heroLucro').textContent = fmt(lucro);
+      document.getElementById('heroMargem').textContent = margem.toFixed(1) + '%';
+      document.getElementById('heroMes').textContent = view.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' });
+      
+      // KPIs
+      document.getElementById('kpiVendaBruta').textContent = fmt(vendaBruta);
+      document.getElementById('kpiVendaLiq').textContent = fmt(vendaLiq);
+      document.getElementById('kpiGastoMeta').textContent = fmt(totalGasto);
+      document.getElementById('kpiCustos').textContent = fmt(custos);
+      
+      // Gauges
+      document.getElementById('gaugeRoas').textContent = roas.toFixed(2) + 'x';
+      document.getElementById('gaugeRoas').className = roas >= cfg.roasAlvo ? 'gauge-circle meta' : 'gauge-circle fora';
+      document.getElementById('gaugeCpa').textContent = fmt(cpa);
+      document.getElementById('gaugeCpa').className = cpa <= cfg.cpaMax ? 'gauge-circle meta' : 'gauge-circle fora';
+      document.getElementById('gaugeMargem').textContent = margem.toFixed(1) + '%';
+      document.getElementById('gaugeMargem').className = margem >= cfg.margemMeta ? 'gauge-circle meta' : 'gauge-circle fora';
+      
+      // Entries table
+      const tbody = document.getElementById('entriesBody');
+      tbody.innerHTML = monthEntries.map(e => {
+        const c = calc(e);
+        return `<tr>
+          <td>${new Date(e.date).toLocaleDateString('pt-BR')}</td>
+          <td>${fmt(c.vbruta)}</td>
+          <td>${fmt(e.vliq)}</td>
+          <td>${fmt(e.custos)}</td>
+          <td>${fmt(c.gastoI)}</td>
+          <td style="color: ${c.resultado >= 0 ? '#1C9667' : '#D84A35'}; font-weight: 600;">${fmt(c.resultado)}</td>
+          <td>${c.margem.toFixed(1)}%</td>
+          <td><button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="deleteEntry('${e.id}')">Del</button></td>
+        </tr>`;
+      }).join('');
+      
+      // Despesas
+      const despList = document.getElementById('despesosList');
+      const despMes = despesas[k] || [];
+      despList.innerHTML = despMes.length > 0
+        ? despMes.map(d => `<div class="despesa-item"><div class="despesa-info"><div class="despesa-desc">${d.desc}</div><div class="despesa-valor">${fmt(d.valor)}</div></div></div>`).join('')
+        : '<p style="color: #757575; text-align: center; padding: 20px;">Nenhuma despesa este mês</p>';
+      
+      // Form inputs
+      document.getElementById('cYampi').value = cfg.yampiRate;
+      document.getElementById('cMeta').value = cfg.metaRate;
+      document.getElementById('cCpa').value = cfg.cpaMax;
+      document.getElementById('cRoas').value = cfg.roasAlvo;
+      document.getElementById('cMarg').value = cfg.margemMeta;
+    };
+
+    const switchTab = tab => {
+      document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+      event.target.classList.add('active');
+    };
+
+    const clearForm = () => {
+      editId = null;
+      ['fData', 'fPixY', 'fCcY', 'fPixCnpj', 'fVliq', 'fCustos', 'fEstorno', 'fGasto', 'fPedidos', 'fPecas'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('preview').innerHTML = '';
+    };
+
+    const deleteEntry = async id => {
+      entries = entries.filter(e => e.id !== id);
+      try {
+        await fetch(`${API_URL}/api/entries/${id}`, { method: 'DELETE' });
+      } catch (e) {
+        console.warn('Delete falhou:', e.message);
+      }
+      render();
+      toast('Lançamento removido');
+    };
+
+    // Init
+    syncData();
+    setInterval(syncData, 30000); // Sync a cada 30s
+  </script>
+</body>
+</html>
